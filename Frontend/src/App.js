@@ -9,7 +9,7 @@ import JobListings from "./pages/JobListings";
 import JobDetails from "./pages/JobDetails";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-
+import ForgotPassword from "./pages/ForggotPassword";
 import CandidateDashboard from "./pages/candidate/CandidateDashboard";
 import AppliedJobs from "./pages/candidate/AppliedJobs";
 import Profile from "./pages/candidate/Profile";
@@ -82,7 +82,7 @@ const App = () => (
 
           <Route path="/login"    element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
           <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
-
+<Route path="/forgot-password" element={<ForgotPassword />} />
           {/* ── /dashboard → smart redirect ── */}
           <Route path="/dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
 

@@ -1,57 +1,46 @@
 require("dotenv").config();
-const express = require("express");
-const dotenv = require("dotenv");
-const cors = require("cors");
-const mongoose = require("mongoose");
 
-// Load env variables
-dotenv.config();
+const express   = require("express");
+const cors      = require("cors");
+const mongoose  = require("mongoose");
 
-// Initialize app
 const app = express();
 
-// 🔐 Middleware
-app.use(express.json());
+// ── Middleware ────────────────────────────────────────────────
+app.use(cors({
+  origin:      process.env.CLIENT_URL || "http://localhost:3000",
+  credentials: true,
+}));
+app.use(express.json({ limit: "10mb" }));           // 10mb to support base64 profile pics
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
 
-// 📌 Import Routes
-const authRoutes = require("./routes/authRoutes");
-const jobRoutes = require("./routes/jobRoutes");
+// ── Routes ────────────────────────────────────────────────────
+const authRoutes        = require("./routes/authRoutes");
+const jobRoutes         = require("./routes/jobRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 
-// 📌 Import Error Middleware
-const { errorMiddleware, notFound } = require("./middleware/errorMiddleware");
-
-// 📌 Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/jobs", jobRoutes);
+app.use("/api/auth",         authRoutes);
+app.use("/api/jobs",         jobRoutes);
 app.use("/api/applications", applicationRoutes);
 
-// 📌 Root Route
-app.get("/", (req, res) => {
-  res.send("🚀 Job Portal API is running...");
-});
+// ── Health check ─────────────────────────────────────────────
+app.get("/",          (req, res) => res.json({ message: "🚀 JobPortal API is running" }));
+app.get("/api/health",(req, res) => res.json({ status: "ok", env: process.env.NODE_ENV }));
 
-// ❌ Handle 404
+// ── Error handling ────────────────────────────────────────────
+const { notFound, errorMiddleware } = require("./middleware/errorMiddleware");
 app.use(notFound);
-
-// 🔴 Global Error Handler
 app.use(errorMiddleware);
 
-// 📌 Connect to MongoDB
+// ── Connect DB and start server ───────────────────────────────
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB Connected");
-
-    // Start server after DB connection
-    app.listen(process.env.PORT || 5000, () => {
-      console.log(
-        `🚀 Server running on port ${process.env.PORT || 5000}`
-      );
-    });
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch((err) => {
     console.error("❌ DB Connection Error:", err.message);
+    process.exit(1);
   });

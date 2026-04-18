@@ -1,76 +1,84 @@
-import axios from "axios";
+// ─────────────────────────────────────────────────────────────
+//  services/authService.js
+//  Frontend service — all auth API calls
+// ─────────────────────────────────────────────────────────────
 
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api",
-});
+const BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-// ✅ Attach token to every request automatically
-API.interceptors.request.use((config) => {
+// ─── Core fetch wrapper ───────────────────────────────────────
+const apiFetch = async (url, method = "GET", body = null) => {
   const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
 
-// ─── AUTH ───────────────────────────────────────────────
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-/**
- * Login user
- * Expects API to return: { token, user: { _id, name, email, role } }
- */
-export const loginUser = async (formData) => {
-  const res = await API.post("/auth/login", formData);
+  const config = { method, headers };
+  if (body) config.body = JSON.stringify(body);
 
-  // ✅ Save token + user to localStorage so ProtectedRoute can read them
-  if (res.data?.token) {
-    localStorage.setItem("token", res.data.token);
-  }
-  if (res.data?.user) {
-    localStorage.setItem("user", JSON.stringify(res.data.user));
+  const res  = await fetch(`${BASE}${url}`, config);
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    // ✅ Throw error object that has a .message property
+    // This fixes err?.response?.data?.message not working (that's axios syntax)
+    const err = new Error(data.message || `Request failed (${res.status})`);
+    err.status = res.status;
+    err.data   = data;
+    throw err;
   }
 
-  return res.data;
+  return data;
 };
 
-/**
- * Register user
- * Expects API to return: { token, user: { _id, name, email, role } }
- */
+// ─── Register ─────────────────────────────────────────────────
 export const registerUser = async (formData) => {
-  const res = await API.post("/auth/register", formData);
+  const res = await apiFetch("/auth/register", "POST", formData);
 
-  // Auto-login after register (optional — remove if you want manual login)
-  if (res.data?.token) {
-    localStorage.setItem("token", res.data.token);
-  }
-  if (res.data?.user) {
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-  }
+  // Save to localStorage
+  if (res?.token) localStorage.setItem("token", res.token);
+  if (res?.user)  localStorage.setItem("user",  JSON.stringify(res.user));
 
-  return res.data;
+  return res;
 };
 
-/**
- * Logout — clears localStorage and reloads
- */
+// ─── Login ────────────────────────────────────────────────────
+export const loginUser = async (formData) => {
+  const res = await apiFetch("/auth/login", "POST", formData);
+
+  // Save to localStorage
+  if (res?.token) localStorage.setItem("token", res.token);
+  if (res?.user)  localStorage.setItem("user",  JSON.stringify(res.user));
+
+  return res;
+};
+
+// ─── Logout ───────────────────────────────────────────────────
 export const logoutUser = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
 };
 
-/**
- * Get current user from localStorage (no API call)
- */
+// ─── Get current user from localStorage (no API call) ─────────
 export const getCurrentUser = () => {
-  try {
-    return JSON.parse(localStorage.getItem("user")) || null;
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(localStorage.getItem("user")) || null; }
+  catch { return null; }
 };
 
-/**
- * Check if user is logged in
- */
-export const isAuthenticated = () => {
-  return !!localStorage.getItem("token");
+// ─── Get Me (from API) ────────────────────────────────────────
+export const getMe = () => apiFetch("/auth/me");
+
+// ─── Update profile ───────────────────────────────────────────
+export const updateProfile = async (formData) => {
+  const res = await apiFetch("/auth/profile", "PUT", formData);
+  // Update stored user
+  if (res?.user) localStorage.setItem("user", JSON.stringify(res.user));
+  return res;
 };
+
+// ─── Change password ──────────────────────────────────────────
+export const changePassword = (data) => apiFetch("/auth/change-password", "PUT", data);
+
+// ─── Forgot password ──────────────────────────────────────────
+export const forgotPassword  = (email)                  => apiFetch("/auth/forgot-password", "POST", { email });
+export const verifyOtp       = (email, otp)             => apiFetch("/auth/verify-otp",      "POST", { email, otp });
+export const resetPassword   = (email, otp, newPassword) => apiFetch("/auth/reset-password",  "POST", { email, otp, newPassword });
