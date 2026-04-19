@@ -4,10 +4,10 @@ import { loginUser } from "../services/authService";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [form, setForm]             = useState({ email: "", password: "" });
-  const [showPassword, setShowPw]   = useState(false);
-  const [error, setError]           = useState("");
-  const [loading, setLoading]       = useState(false);
+  const [form, setForm]           = useState({ email: "", password: "" });
+  const [showPassword, setShowPw] = useState(false);
+  const [error, setError]         = useState("");
+  const [loading, setLoading]     = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -17,36 +17,24 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.email || !form.password) { setError("Please fill in all fields."); return; }
-
-    setLoading(true);
-    setError("");
-
+    setLoading(true); setError("");
     try {
       const res = await loginUser(form);
-
-      // authService saves token + user to localStorage already
-      // ✅ FIXED: backend roles are "user" and "recruiter" — NOT "candidate"/"employer"
       const role = res?.user?.role;
-      if (role === "recruiter") {
-        navigate("/employer/dashboard", { replace: true });
-      } else {
-        navigate("/candidate/dashboard", { replace: true });
-      }
+      if (role === "recruiter") navigate("/employer/dashboard", { replace: true });
+      else navigate("/candidate/dashboard", { replace: true });
     } catch (err) {
-      // ✅ FIXED: err.message works for both fetch and axios errors
       setError(err?.message || "Invalid email or password. Try again.");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        .lr { min-height:100vh; display:flex; font-family:'DM Sans',sans-serif; background:#f0ede8; overflow:hidden; }
-        .lp { display:none; flex:1; background:#0f2027; position:relative; overflow:hidden; }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        .lr{min-height:100vh;display:flex;font-family:'DM Sans',sans-serif;background:#f0ede8;overflow:hidden;}
+        .lp{display:none;flex:1;background:#0f2027;position:relative;overflow:hidden;}
         @media(min-width:900px){.lp{display:flex;flex-direction:column;justify-content:center;padding:60px;}}
         .pc{position:absolute;border-radius:50%;opacity:.12;}
         .pc.c1{width:500px;height:500px;background:#3b82f6;top:-100px;left:-100px;}
@@ -73,8 +61,7 @@ const Login = () => {
         .fi{width:100%;padding:14px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;color:#0f2027;background:#fff;outline:none;transition:border-color .2s,box-shadow .2s;}
         .fi:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12);}
         .fi::placeholder{color:#c4c9d4;}
-        .pw{position:relative;}
-        .pw .fi{padding-right:52px;}
+        .pw{position:relative;}.pw .fi{padding-right:52px;}
         .sb{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;letter-spacing:.5px;text-transform:uppercase;transition:color .2s;padding:4px;}
         .sb:hover{color:#6366f1;}
         .fr{display:flex;justify-content:flex-end;margin-top:-12px;margin-bottom:28px;}
@@ -94,13 +81,12 @@ const Login = () => {
       `}</style>
 
       <div className="lr">
-        {/* Left Panel */}
         <div className="lp">
-          <div className="pc c1" /><div className="pc c2" /><div className="pc c3" />
-          <div style={{ position:"relative", zIndex:1 }}>
+          <div className="pc c1"/><div className="pc c2"/><div className="pc c3"/>
+          <div style={{position:"relative",zIndex:1}}>
             <p className="pt">JobPortal — Career Platform</p>
-            <h1 className="ph">Your next big<br />opportunity <span>awaits</span><br />you here.</h1>
-            <div className="pd" />
+            <h1 className="ph">Your next big<br/>opportunity <span>awaits</span><br/>you here.</h1>
+            <div className="pd"/>
             <p className="ps">Thousands of companies are actively hiring. Your dream role is one application away.</p>
             <div className="pst">
               <div><div className="sn">12K+</div><div className="sl">Live Jobs</div></div>
@@ -110,10 +96,9 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Right Form */}
         <div className="lfs">
           <div className="lc">
-            <div className="logo"><span className="logo-dot" />JobPortal</div>
+            <div className="logo"><span className="logo-dot"/>JobPortal</div>
             <h2 className="lt">Welcome back</h2>
             <p className="ls">Sign in to continue your job search</p>
 
@@ -131,27 +116,24 @@ const Login = () => {
                 <label className="fl" htmlFor="email">Email address</label>
                 <input id="email" type="email" name="email" value={form.email}
                   onChange={handleChange} placeholder="you@example.com"
-                  className="fi" autoComplete="email" />
+                  className="fi" autoComplete="email"/>
               </div>
-
               <div className="fg">
                 <label className="fl" htmlFor="password">Password</label>
                 <div className="pw">
-                  <input id="password" type={showPassword ? "text" : "password"}
-                    name="password" value={form.password} onChange={handleChange}
-                    placeholder="Enter your password" className="fi" autoComplete="current-password" />
-                  <button type="button" className="sb" onClick={() => setShowPw(!showPassword)}>
-                    {showPassword ? "Hide" : "Show"}
+                  <input id="password" type={showPassword?"text":"password"} name="password"
+                    value={form.password} onChange={handleChange}
+                    placeholder="Enter your password" className="fi" autoComplete="current-password"/>
+                  <button type="button" className="sb" onClick={()=>setShowPw(!showPassword)}>
+                    {showPassword?"Hide":"Show"}
                   </button>
                 </div>
               </div>
-
               <div className="fr">
                 <Link to="/forgot-password" className="frl">Forgot password?</Link>
               </div>
-
               <button type="submit" className="sub" disabled={loading}>
-                {loading ? <><div className="sp" /> Signing in...</> : "Sign In →"}
+                {loading ? <><div className="sp"/> Signing in...</> : "Sign In →"}
               </button>
             </form>
 
